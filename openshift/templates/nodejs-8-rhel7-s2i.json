@@ -1,0 +1,339 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "nodejs-8-rhel7-s2i",
+        "annotations": {
+            "openshift.io/display-name": "Node.js 8 S2I",
+            "description": "A Node.js application",
+            "tags": "node, nodejs, node8, node.js",
+            "iconClass": "icon-nodejs",
+            "template.openshift.io/long-description": "This template defines resources needed to develop a NodeJS application, including a build configuration and application deployment configuration. It does includes a database.",
+            "template.openshift.io/provider-display-name": "UPS"
+        }
+    },
+    "message": "The following service(s) have been created in your project: ${COMPONENT_NAME}.",
+    "labels": {
+        "template": "nodejs-8-rhel7-s2i"
+    },
+    "objects": [{
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${COMPONENT_NAME}",
+                "labels": {
+                    "component": "${COMPONENT_NAME}"
+                },
+                "annotations": {
+                    "description": "Exposes and load balances the application pods"
+                }
+            },
+            "spec": {
+                "ports": [{
+                    "name": "web",
+                    "port": 8080,
+                    "targetPort": 8080
+                }],
+                "selector": {
+                    "name": "${COMPONENT_NAME}"
+                }
+            }
+        },
+        {
+            "kind": "Route",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${COMPONENT_NAME}",
+                "labels": {
+                    "component": "${COMPONENT_NAME}"
+                },
+                "annotations": {
+                    "template.openshift.io/expose-uri": "http://{.spec.host}{.spec.path}"
+                }
+            },
+            "spec": {
+                "host": "${APPLICATION_DOMAIN}",
+                "to": {
+                    "kind": "Service",
+                    "name": "${COMPONENT_NAME}"
+                }
+            }
+        },
+        {
+            "kind": "ImageStream",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${COMPONENT_NAME}",
+                "labels": {
+                    "component": "${COMPONENT_NAME}"
+                },
+                "annotations": {
+                    "description": "Keeps track of changes in the application image"
+                }
+            }
+        },
+        {
+            "kind": "BuildConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${COMPONENT_NAME}",
+                "labels": {
+                    "component": "${COMPONENT_NAME}"
+                },
+                "annotations": {
+                    "description": "Defines how to build the application"
+                }
+            },
+            "spec": {
+                "source": {
+                    "type": "Git",
+                    "git": {
+                        "uri": "${SOURCE_REPOSITORY_URL}",
+                        "ref": "${SOURCE_REPOSITORY_REF}"
+                    },
+                    "contextDir": "${CONTEXT_DIR}",
+                    "sourceSecret": {
+                        "name": "gitsecret"
+                    }
+                },
+                "strategy": {
+                    "type": "Source",
+                    "sourceStrategy": {
+                        "from": {
+                            "kind": "ImageStreamTag",
+                            "namespace": "krang",
+                            "name": "nodejs-8-rhel7:latest"
+                        },
+                        "env": [{
+                            "name": "NODE_ENV",
+                            "value": "development"
+                        }]
+                    }
+                },
+                "output": {
+                    "to": {
+                        "kind": "ImageStreamTag",
+                        "name": "${COMPONENT_NAME}:latest"
+                    }
+                },
+                "resources": {
+                    "requests": {
+                        "cpu": "${BUILD_CPU_REQUEST}",
+                        "memory": "${BUILD_MEM_REQUEST}"
+                    },
+                    "limits": {
+                        "cpu": "${BUILD_CPU_LIMIT}",
+                        "memory": "${BUILD_MEM_LIMIT}"
+                    }
+                },
+                "triggers": [{
+                        "type": "ImageChange"
+                    },
+                    {
+                        "type": "ConfigChange"
+                    }
+                ],
+                "postCommit": {
+                    "script": "npm test"
+                }
+            }
+        },
+        {
+            "kind": "DeploymentConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${COMPONENT_NAME}",
+                "labels": {
+                    "component": "${COMPONENT_NAME}"
+                },
+                "annotations": {
+                    "description": "Defines how to deploy the application server"
+                }
+            },
+            "spec": {
+                "strategy": {
+                    "type": "Rolling"
+                },
+                "triggers": [{
+                        "type": "ImageChange",
+                        "imageChangeParams": {
+                            "automatic": true,
+                            "containerNames": [
+                                "${COMPONENT_NAME}"
+                            ],
+                            "from": {
+                                "kind": "ImageStreamTag",
+                                "name": "${COMPONENT_NAME}:latest"
+                            }
+                        }
+                    },
+                    {
+                        "type": "ConfigChange"
+                    }
+                ],
+                "replicas": 1,
+                "selector": {
+                    "name": "${COMPONENT_NAME}"
+                },
+                "template": {
+                    "metadata": {
+                        "name": "${COMPONENT_NAME}",
+                        "labels": {
+                            "name": "${COMPONENT_NAME}"
+                        }
+                    },
+                    "spec": {
+                        "containers": [{
+                            "name": "${COMPONENT_NAME}",
+                            "image": "${COMPONENT_NAME}:latest",
+                            "ports": [{
+                                "containerPort": 8080
+                            }],
+                            "readinessProbe": {
+                                "tcpSocket": {
+                                    "port": 8080
+                                },
+                                "initialDelaySeconds": "${READINESS_DELAY}",
+                                "timeoutSeconds": 10
+                            },
+                            "livenessProbe": {
+                                "tcpSocket": {
+                                    "port": 8080
+                                },
+                                "initialDelaySeconds": "${LIVENESS_DELAY}",
+                                "timeoutSeconds": 10
+                            },
+                            "env": [
+                                {
+                                    "name": "OPENSHIFT_CLUSTER_HOST",
+                                    "value": "master-paas-dev-njrar-01.ams1907.com"
+                                },
+                                {
+                                    "name": "APM_ENABLED",
+                                    "value": "false"
+                                },
+                                {
+                                    "name": "DEV_MODE",
+                                    "value": "true"
+                                }
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "cpu": "${DEPLOY_CPU_REQUEST}",
+                                    "memory": "${DEPLOY_MEM_REQUEST}"
+                                },
+                                "limits": {
+                                    "cpu": "${DEPLOY_CPU_LIMIT}",
+                                    "memory": "${DEPLOY_MEM_LIMIT}"
+                                }
+                            }
+                        }]
+                    }
+                }
+            }
+        }
+    ],
+    "parameters": [{
+            "name": "COMPONENT_NAME",
+            "displayName": "Microservice Name",
+            "description": "The name assigned to all of the frontend objects defined in this template.",
+            "required": true,
+            "value": "nodejs-example"
+        },
+        {
+            "name": "SOURCE_REPOSITORY_URL",
+            "displayName": "Git Repository URL",
+            "description": "The URL of the repository with your application source code.",
+            "required": true,
+            "value": ""
+        },
+        {
+            "name": "SOURCE_REPOSITORY_REF",
+            "displayName": "Git Reference",
+            "description": "Set this to a branch name, tag or other ref of your repository if you are not using the default branch.",
+            "required": true,
+            "value": "master"
+        },
+        {
+            "name": "CONTEXT_DIR",
+            "displayName": "Context Directory",
+            "description": "Set this to the relative path to your project if it is not in the root of your repository."
+        },
+        {
+            "name": "APPLICATION_DOMAIN",
+            "displayName": "Application Hostname",
+            "description": "The exposed hostname that will route to the Node.js service, if left blank a value will be defaulted.",
+            "value": ""
+        },
+        {
+            "name": "LIVENESS_DELAY",
+            "displayName": "Liveness Delay",
+            "value": "30",
+            "description": "Intial amount of time in seconds to wait to perform a liveness check.",
+            "required": true
+        },
+        {
+            "name": "READINESS_DELAY",
+            "displayName": "Readiness Delay",
+            "value": "30",
+            "description": "Intial amount of time in seconds to wait to perform a readiness check.",
+            "required": true
+        },
+        {
+            "name": "BUILD_CPU_REQUEST",
+            "displayName": "Build CPU Request",
+            "description": "The requested CPU for a build.",
+            "value": "300m",
+            "required": true
+        },
+        {
+            "name": "BUILD_MEM_REQUEST",
+            "displayName": "Build Memory Request",
+            "description": "The requested memory for a build",
+            "value": "512Mi",
+            "required": true
+        },
+        {
+            "name": "BUILD_CPU_LIMIT",
+            "displayName": "Build CPU Limit",
+            "description": "The limit of CPU to allow for a build",
+            "value": "300m",
+            "required": true
+        },
+        {
+            "name": "BUILD_MEM_LIMIT",
+            "displayName": "Build Memory Limit",
+            "description": "The limit of memory to allow for a build",
+            "value": "512Mi",
+            "required": true
+        },
+        {
+            "name": "DEPLOY_CPU_REQUEST",
+            "displayName": "Deploy CPU Request",
+            "description": "The requested CPU for a deploy.",
+            "value": "300m",
+            "required": true
+        },
+        {
+            "name": "DEPLOY_MEM_REQUEST",
+            "deployName": "Deploy Memory Request",
+            "description": "The requested memory for a deploy",
+            "value": "512Mi",
+            "required": true
+        },
+        {
+            "name": "DEPLOY_CPU_LIMIT",
+            "displayName": "Deploy CPU Limit",
+            "description": "The limit of CPU to allow for a deploy",
+            "value": "300m",
+            "required": true
+        },
+        {
+            "name": "DEPLOY_MEM_LIMIT",
+            "displayName": "Deploy Memory Limit",
+            "description": "The limit of memory to allow for a deploy",
+            "value": "512Mi",
+            "required": true
+        }
+    ]
+}
