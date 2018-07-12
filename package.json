@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/krang-drive/package-bot/issues"
   },
-  "homepage": "https://github.com/krang-drive/package-bot#readme"
+  "homepage": "https://github.com/krang-drive/package-bot#readme",
+  "dependencies": {
+    "express": "^4.16.3"
+  }
 }
