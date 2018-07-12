@@ -1,0 +1,19 @@
+{
+  "name": "package-bot",
+  "version": "0.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo true"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/krang-drive/package-bot.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/krang-drive/package-bot/issues"
+  },
+  "homepage": "https://github.com/krang-drive/package-bot#readme"
+}
