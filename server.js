@@ -45,20 +45,20 @@ app.get('/start/:facilityId', (req, res) => {
     };
 
     // Post package to store (must have an endpoint that accepts a POST for an array of packages. these can just be document inserts, no upsert/update necessary)
-    let pkgPostReq = client.post(`package-store/packageSet`, args, (data, response) => {
-        console.log(data);
+    let pkgPostReq = client.post('http://package-store:8080/packageSet', args, (data, response) => {
 
         let routeArgs = {
           data: req.params.facilityId,
           headers: { "Content-Type": "text/plain" }
         }
-        let routePostReq = client.post(`route-manager/facility`, routeArgs, (data,response) => {
-          //res.send("sent")
-          console.log("success");
+        let routePostReq = client.post(`http://route-manager:8080/facility`, routeArgs, (data,response) => {
+            res.send("sent")
+            console.log("success");
+            console.log(data);
         });
         routePostReq.on('error', (err) => {
           console.log('request err', err);
-          //res.end();
+          res.end();
         });
         //res.send('Sent');
     });
@@ -66,12 +66,12 @@ app.get('/start/:facilityId', (req, res) => {
     // log any errors from the request
     pkgPostReq.on('error', (err) => {
         console.log('request error', err);
-        //res.end();
+        res.end();
     });
 
 
 
-    res.send("sent");
+    // res.send("sent");
 });
 
 /**
