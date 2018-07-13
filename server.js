@@ -48,6 +48,18 @@ app.get('/start/:facilityId', (req, res) => {
     let pkgPostReq = client.post(`http://package-store:8080/packages`, args, (data, response) => {
         // console.log(data);
         res.send('Sent');
+
+        let routeArgs = {
+          data: req.params.facilityID,
+          headers: { "Content-Type": "text/plain" }
+        }
+        let routePostReq = client.post(`http://route-manager:8080/facility/`, routeArgs, (data,response) => {
+          res.send("sent")
+          console.log("success");
+        });
+        routePostReq.on('error', (err) => {
+          res.send(err);
+        });
     });
 
     // log any errors from the request
@@ -56,16 +68,7 @@ app.get('/start/:facilityId', (req, res) => {
         res.send('Error');
     });
 
-    let routeArgs = {
-      data: req.params.facilityID,
-      headers: { "Content-Type": "text/plain" }
-    }
-    let routePostReq = client.post(`route-manager:8080/facility/`, routeArgs, (data,response) => {
-      res.send("sent")
-    });
-    routePostReq.on('error', (err) => {
-      res.send(err);
-    })
+
 
     res.send("sent")
 });
