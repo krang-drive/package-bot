@@ -24,20 +24,20 @@ app.get('/start/:facilityId', (req, res) => {
         let deliveryLocation = '50 E New St. Dover, NJ';
         let signatureRequired = Math.round(Math.random()) ? true : false;
         let isDelivered = false;
-
+        let weight = 2;
         // Create Package JSON
         let pkg = {
-            facilityID: facilityId,
+            facilityId: facilityId,
             packageId: packageId,
             deliveryLocation: deliveryLocation,
             signatureRequired: signatureRequired,
-            isDelivered: isDelivered
+            isDelivered: isDelivered,
+            packageWeight: weight
         }
 
         // Add to the packages array
         packages.push(pkg);
     }
-
     // Construct POST payload
     let args = {
         data: { packageData: packages },
@@ -49,7 +49,7 @@ app.get('/start/:facilityId', (req, res) => {
         console.log(data);
 
         let routeArgs = {
-          data: req.params.facilityID,
+          data: req.params.facilityId,
           headers: { "Content-Type": "text/plain" }
         }
         let routePostReq = client.post(`route-manager/facility`, routeArgs, (data,response) => {
