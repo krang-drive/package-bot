@@ -44,8 +44,6 @@ app.get('/start/:facilityId', (req, res) => {
         headers: { "Content-Type": "application/json" }
     };
 
-    console.log(args);
-
     // Post package to store (must have an endpoint that accepts a POST for an array of packages. these can just be document inserts, no upsert/update necessary)
     let pkgPostReq = client.post(`http://package-store:8080/packages`, args, (data, response) => {
         // console.log(data);
@@ -69,6 +67,7 @@ app.get('/start/:facilityId', (req, res) => {
       res.send(err);
     })
 
+    res.send("sent")
 });
 
 /**
