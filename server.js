@@ -59,7 +59,7 @@ app.get('/start/:facilityId', (req, res) => {
     });
 
     let routeArgs = {
-      data: req.params.facilityID;
+      data: req.params.facilityID,
       headers: { "Content-Type": "text/plain" }
     }
     let routePostReq = client.post(`route-manager:8080/facility/`, routeArgs, (data,response) => {
