@@ -53,19 +53,20 @@ app.get('/start/:facilityId', (req, res) => {
           headers: { "Content-Type": "text/plain" }
         }
         let routePostReq = client.post(`route-manager:8080/facility/`, routeArgs, (data,response) => {
-          res.send("sent")
+          //res.send("sent")
           console.log("success");
         });
         routePostReq.on('error', (err) => {
-          res.send(err);
+          console.log('request err', err);
+          //res.end();
         });
-        res.send('Sent');
+        //res.send('Sent');
     });
 
     // log any errors from the request
     pkgPostReq.on('error', (err) => {
-        // console.log('request error', err);
-        res.send('Error');
+        console.log('request error', err);
+        //res.end();
     });
 
 
