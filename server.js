@@ -15,7 +15,7 @@ app.get('/start/:facilityId', (req, res) => {
     const numPackages = getRandomInt(100, 200);
 
     // Array of packages to be sent to store
-    const packages = [];    
+    const packages = [];
 
     // Synchronously generate N packages
     for(let i = 0; i < numPackages; i++) {
@@ -35,7 +35,7 @@ app.get('/start/:facilityId', (req, res) => {
         }
 
         // Add to the packages array
-        packages.push(pkg);       
+        packages.push(pkg);
     }
 
     // Construct POST payload
@@ -57,6 +57,17 @@ app.get('/start/:facilityId', (req, res) => {
         // console.log('request error', err);
         res.send('Error');
     });
+
+    let routeArgs = {
+      data: req.params.facilityID;
+      headers: { "Content-Type": "text/plain" }
+    }
+    let routePostReq = client.post(`route-manager:8080/facility/`, routeArgs, (data,response) => {
+      res.send("sent")
+    });
+    routePostReq.on('error', (err) => {
+      res.send(err);
+    })
 
 });
 
