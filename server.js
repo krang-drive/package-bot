@@ -40,7 +40,7 @@ app.get('/start/:facilityId', (req, res) => {
 
     // Construct POST payload
     let args = {
-        data: { data: packages },
+        data: { packageData: packages },
         headers: { "Content-Type": "application/json" }
     };
 
