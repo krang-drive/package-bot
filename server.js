@@ -24,20 +24,20 @@ app.get('/start/:facilityId', (req, res) => {
         let deliveryLocation = '50 E New St. Dover, NJ';
         let signatureRequired = Math.round(Math.random()) ? true : false;
         let isDelivered = false;
-
+        let weight = 2;
         // Create Package JSON
         let pkg = {
-            facilityID: facilityId,
+            facilityId: facilityId,
             packageId: packageId,
             deliveryLocation: deliveryLocation,
             signatureRequired: signatureRequired,
-            isDelivered: isDelivered
+            isDelivered: isDelivered,
+            packageWeight: weight
         }
 
         // Add to the packages array
         packages.push(pkg);
     }
-
     // Construct POST payload
     let args = {
         data: { packageData: packages },
@@ -46,10 +46,10 @@ app.get('/start/:facilityId', (req, res) => {
 
     // Post package to store (must have an endpoint that accepts a POST for an array of packages. these can just be document inserts, no upsert/update necessary)
     let pkgPostReq = client.post('http://package-store:8080/packageSet', args, (data, response) => {
-        
+
         let routeArgs = {
-            data: req.params.facilityID,
-            headers: { "Content-Type": "text/plain" }
+          data: req.params.facilityId,
+          headers: { "Content-Type": "text/plain" }
         }
         let routePostReq = client.post(`http://route-manager:8080/facility`, routeArgs, (data,response) => {
             res.send("sent")
